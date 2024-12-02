@@ -28,7 +28,7 @@ buraco_imagem = "assets/buraco.png"
 rampa_imagem = "assets/rampa.png"
 
 # Objetos principais
-jogador = Jogador(50, ALTURA - 100, 60, 40, gato_imagem)
+jogador = Jogador(50, ALTURA - 100, 50, 50, gato_imagem)
 cenas = Cenas(buraco_imagem, rampa_imagem)
 interface = Interface(FONTE, (0, 0, 0))
 cenas.criar_elementos()
@@ -43,6 +43,7 @@ def jogo():
     global pontuacao, fase, ranking
     rodando = True
     altura_chao = ALTURA - 100
+    proxima_fase_pontuacao = 50  # Pontuação para mudar de fase
 
     while rodando:
         TELA.fill(BRANCO)
@@ -63,22 +64,36 @@ def jogo():
 
         # Colisões
         for buraco in cenas.buracos:
-            if jogador.x < buraco.x + buraco.largura and jogador.x + jogador.largura > buraco.x and jogador.y + jogador.altura > buraco.y:
+            if jogador.colidir(buraco):
                 ranking.append(pontuacao)
                 ranking.sort(reverse=True)
                 interface.mostrar_ranking(TELA, ranking)
                 rodando = False
+
+        # Controle de fases
+        if pontuacao >= proxima_fase_pontuacao:
+            fase += 1
+            proxima_fase_pontuacao += 50
+            cenas.aumentar_dificuldade(fase)
+
+            interface.exibir_texto(TELA, f"Fase {fase}!", LARGURA // 2 - 50, ALTURA // 2)
+            pygame.display.flip()
+            pygame.time.delay(1000)
 
         # Desenhar na tela
         jogador.desenhar(TELA)
         cenas.desenhar(TELA)
         interface.exibir_texto(TELA, f"Fase: {fase} | Pontuação: {pontuacao}", 10, 10)
 
-        # Pontuação e fases
+        # Incrementar pontuação
         pontuacao += 1
-        if pontuacao % 50 == 0:
-            fase += 1
-            cenas.velocidade += 1
+
+        # Limite de fases
+        if fase > 3:
+            interface.exibir_texto(TELA, "Você venceu!", LARGURA // 2 - 50, ALTURA // 2)
+            pygame.display.flip()
+            pygame.time.delay(3000)
+            rodando = False
 
         pygame.display.flip()
         clock.tick(30)
