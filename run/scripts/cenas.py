@@ -9,6 +9,7 @@ class Cenas:
         self.buracos = []
         self.rampas = []
         self.velocidade = 2
+        
 
     def criar_elementos(self):
         self.buracos.append(Buraco(800, 300, 50, 100, self.buraco_imagem))

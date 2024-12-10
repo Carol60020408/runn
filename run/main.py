@@ -1,6 +1,7 @@
 import sys
 import os
 import pygame
+import time
 
 # Adicionar o caminho para a pasta 'scripts'
 sys.path.append(os.path.join(os.path.dirname(__file__), 'scripts'))
@@ -38,12 +39,15 @@ pontuacao = 0
 fase = 1
 ranking = []
 
+# Controle do tempo
+ultimo_segundo = time.time()
+
 # Loop principal
 def jogo():
-    global pontuacao, fase, ranking
+    global pontuacao, fase, ranking, ultimo_segundo
     rodando = True
     altura_chao = ALTURA - 100
-    proxima_fase_pontuacao = 50  # Pontuação para mudar de fase
+    proxima_fase_pontuacao = 20 # Pontuação para mudar de fase
 
     while rodando:
         TELA.fill(BRANCO)
@@ -53,14 +57,21 @@ def jogo():
                 rodando = False
                 pygame.quit()
 
-        # Controles do jogador
+        # Captura o estado das teclas
         teclas = pygame.key.get_pressed()
-        if teclas[pygame.K_SPACE]:
-            jogador.pular()
+        
+        # Controle de pulo
+        jogador.pular(teclas[pygame.K_SPACE])
 
         # Atualizações do jogo
-        jogador.atualizar(altura_chao)
+        jogador.atualizar(altura_chao, teclas)
         cenas.atualizar()
+
+        # Incremento da pontuação por segundo
+        tempo_atual = time.time()
+        if tempo_atual - ultimo_segundo >= 1:
+            pontuacao += 1
+            ultimo_segundo = tempo_atual
 
         # Colisões
         for buraco in cenas.buracos:
@@ -74,8 +85,7 @@ def jogo():
         if pontuacao >= proxima_fase_pontuacao:
             fase += 1
             proxima_fase_pontuacao += 50
-            cenas.aumentar_dificuldade(fase)
-
+            
             interface.exibir_texto(TELA, f"Fase {fase}!", LARGURA // 2 - 50, ALTURA // 2)
             pygame.display.flip()
             pygame.time.delay(1000)
@@ -85,10 +95,7 @@ def jogo():
         cenas.desenhar(TELA)
         interface.exibir_texto(TELA, f"Fase: {fase} | Pontuação: {pontuacao}", 10, 10)
 
-        # Incrementar pontuação
-        pontuacao += 1
-
-        # Limite de fases
+        # Condição de vitória
         if fase > 3:
             interface.exibir_texto(TELA, "Você venceu!", LARGURA // 2 - 50, ALTURA // 2)
             pygame.display.flip()
